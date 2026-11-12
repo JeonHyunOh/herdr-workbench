@@ -29,8 +29,9 @@ PERSONAL_DIRS = ['~/.claude', '~/.codex', '~/.config/herdr-app', '~/.bashrc', '~
 
 
 def which(name):
+    """PATH에서 찾은 경로를 링크 그대로 쓴다. 링크를 따라가면 업데이트 뒤 사라지는 버전별 경로가 bench.yaml에 박힌다."""
     found = shutil.which(name)
-    return str(Path(found).resolve()) if found else None
+    return os.path.abspath(found) if found else None
 
 
 def version(path, *args):
