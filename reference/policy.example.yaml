@@ -1,0 +1,77 @@
+# 자율 경계 정책 — 예시판 (일반화)
+# 기준: 되돌릴 수 있으면 autonomous(실행 뒤 보고), 되돌릴 수 없으면 report(사람 승인 뒤), 팀 규칙 위반은 forbidden.
+#
+# bench는 이 파일을 정책 엔진으로 쓰지 않는다. 역할 지시문이 이 기준을 따르게 하고, bench는 한 곳만 읽는다.
+# `close`가 작업자 브랜치를 `git branch -d`로 지우기 전에 아래 `own-merged-branch-cleanup` 규칙이
+# 명령과 조건 4개 그대로 있는지 확인한다. 규칙이 없거나 바뀌면 브랜치를 남기고 이유를 보고한다.
+# 명령 패턴의 <org>·<repo>는 받는 사람이 자기 조직·레포로 바꾼다.
+
+version: 1
+
+limits:
+  max_children: null          # 전체 상한 없음
+  max_children_per_lead: 3    # 리드 하나가 동시에 여는 작업자 수
+  worker:
+    max_turns: 60
+    max_tokens: 400000
+    max_minutes: 120
+
+autonomous:   # 실행 뒤 보고
+  - id: issue-pr-comment
+    tool: Bash
+    command: ["gh issue comment *", "gh pr comment *"]
+  - id: my-pr-merge
+    tool: Bash
+    command: "gh pr merge *"
+    conditions: [pr_author_is_me, ci_passed, required_approvals_met]
+    after: [watch_main_ci_and_report]
+  - id: branch-worktree-pr
+    tool: Bash
+    command: ["git worktree *", "git checkout -b *", "git switch -c *", "git push -u origin *", "gh pr create *"]
+    conditions: [not_main_branch]
+  - id: own-merged-branch-cleanup   # bench close가 확인하는 규칙. 명령과 조건을 바꾸지 않는다
+    tool: Bash
+    command: "git branch -d *"
+    conditions: [branch_created_by_workbench_session, merged_into_origin_main, no_changes_or_unpushed_commits, local_branch_only]
+    note: >
+      작업대 리드가 끝난 작업자를 정리할 때 쓴다. ① 작업대 도구로 만든 브랜치 ② origin/main에 머지됨
+      ③ 변경·미push 커밋 없음 ④ 로컬 브랜치만. 하나라도 안 맞으면 남기고 보고한다.
+      `git branch -D`와 원격 브랜치 삭제는 report다.
+  - id: workspace-edit
+    tool: [Write, Edit]
+    path: ["<cwd>/**"]
+    note: 세션 작업 폴더(작업자는 bench가 만든 워크트리) 안의 파일. git으로 되돌릴 수 있다
+  - id: feature-branch-commit
+    tool: Bash
+    command: ["git add *", "git commit *"]
+    conditions: [not_main_branch]
+
+report:   # 사람 승인 뒤 실행
+  - id: prod-deploy
+    command: ["*deploy*prod*"]
+  - id: force-push
+    command: ["git push --force*", "git push -f*", "git push * --force*"]
+  - id: delete-branch-or-resource
+    command: ["git branch -D *", "git push * --delete *", "gh repo delete*"]
+  - id: close-others-issue
+    command: "gh issue close *"
+    conditions: [issue_author_is_not_me]
+  - id: external-share
+    note: 외부 공개·전달(레포 공개, 문서 공유, 초대)
+  - id: team-rule-docs
+    tool: [Write, Edit]
+    path: ["**/CLAUDE.md", "**/AGENTS.md", "**/.claude/skills/**"]
+  - id: unknown
+    note: 어느 열인지 모르는 세션 밖 효과(팀에 보이는 쓰기, 작업 폴더 밖 쓰기, 네트워크, 샌드박스 승격 요청)
+
+forbidden:
+  - id: merge-others-pr
+    command: "gh pr merge *"
+    conditions: [pr_author_is_not_me]
+  - id: commit-to-main
+    command: ["git push origin main*", "git push * main*", "git commit *"]
+    conditions: [current_branch_is_main]
+  - id: auto-answer-approval
+    note: 승인 대화상자와 trust 질문에 에이전트가 답하지 않는다
+  - id: api-key-billing
+    note: 자식 프로세스 환경에 ANTHROPIC_API_KEY·OPENAI_API_KEY를 넣지 않는다(구독 로그인만)
