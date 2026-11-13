@@ -2,7 +2,7 @@
 
 이 파일 하나로 작업대를 세팅한다. Herdr를 설치한 뒤 Herdr 터미널에서 Claude Code를 열고, 아래 프롬프트를 S0부터 차례로 붙여 넣는다. Claude가 단계마다 확인하고 결과를 보여 준다. 사람의 설정을 바꾸는 명령은 사람이 직접 실행한다.
 
-작업대는 Herdr 위에서 Claude Code와 Codex 세션을 디렉터 → 리드 → 작업자 계층으로 열고, 보고를 수신함으로 모으는 환경이다. 세팅이 끝나면 다음이 생긴다.
+작업대는 Herdr 위에서 Claude Code와 Codex 세션을 디렉터 → 리드 → 작업자 계층으로 열고, 보고를 수신함으로 모으는 환경이다. 계층마다 맡는 일과 규칙은 [세션 계층 체계도](docs/04-session-hierarchy.md)에 있다. 세팅이 끝나면 다음이 생긴다.
 
 - **bench**: 세션을 열고(spawn) 지시·보고·정리(close)하는 명령 도구
 - **역할 지시문 5개**: 디렉터, 리드, 코딩 작업자, 검토 작업자, 조사 작업자
@@ -42,7 +42,7 @@ Claude Code 입력창에서 `!` 뒤에 명령을 쓰면 사람이 그 명령을 
 ## S0. 맥락과 경로 정하기
 
 ```text
-이 폴더는 Herdr 작업대 세팅 묶음이다. SETUP-WITH-CLAUDE.md를 처음부터 끝까지 읽고, 그 '모든 단계에 적용하는 규칙'과 docs/03-safety-rules.md를 이 세션 내내 지킨다. README.md, docs/01-what-is-this.md, docs/02-platform-points.md도 읽는다. 이 단계에서는 파일과 설정을 바꾸지 않고 읽기 명령만 쓴다.
+이 폴더는 Herdr 작업대 세팅 묶음이다. SETUP-WITH-CLAUDE.md를 처음부터 끝까지 읽고, 그 '모든 단계에 적용하는 규칙'과 docs/03-safety-rules.md를 이 세션 내내 지킨다. README.md, docs/01-what-is-this.md, docs/02-platform-points.md, docs/04-session-hierarchy.md도 읽는다. 이 단계에서는 파일과 설정을 바꾸지 않고 읽기 명령만 쓴다.
 
 이 컴퓨터가 macOS, 윈도우 + WSL2(지금 WSL 안에서 돌고 있음), 윈도우 직접(PowerShell) 중 어느 것인지 확인한다. 경로를 하나 고르고 그 경로에서 S1~S6이 무엇을 하는지 5줄 이내로 요약한다. 그 경로의 '운영체제별 상태'에서 확인되지 않은 부분도 말한다. 레포 폴더에 setup-notes.md를 만들고 고른 경로와 확인한 근거를 적는다. 이미 있으면 덮어쓰지 말고 먼저 읽어서 보여 준다.
 ```
